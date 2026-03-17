@@ -104,6 +104,55 @@ def buscar_imoveis_id(id):  # Corrigido: get_moves -> get_imoveis
     conn.close()
     
     return jsonify(imovel_dict), 200
+@app.route('/api/imoveis', methods=['POST'])
+def adicionar_novo_imovel():
+    
+    # 1. Verificar se recebeu JSON
+    if not request.is_json:
+        return {"erro": "Content-Type deve ser application/json"}, 400
+    
+    #2 pegar os dados do post
+    dados = request.get_json()
+    # 3. Validar campos obrigatórios
+    campos_obrigatorios = ['logradouro', 'tipo_logradouro', 'bairro', 'cidade', 'cep', 'tipo', 'valor']
+    for campo in campos_obrigatorios:
+        if campo not in dados:
+            return {"erro": f"Campo '{campo}' é obrigatório"}, 400
+    # 4. Conectar ao banco de dados
+    conn = connect_db()
+   
+    cursor = conn.cursor()
+        
+        
+      
+    cursor.execute("""
+            INSERT INTO imoveis 
+            (logradouro, tipo_logradouro, bairro, cidade, cep, tipo, valor, data_aquisicao)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """,(
+            dados['logradouro'],
+            dados['tipo_logradouro'],
+            dados['bairro'],
+            dados['cidade'],
+            dados['cep'],
+            dados['tipo'],
+            dados['valor'],
+            dados.get('data_aquisicao')  # Opcional
+        ))
+    # 8. Confirmar transação
+    conn.commit()
+    # 9. Pegar ID do novo registro
+    novo_id = cursor.lastrowid
+    cursor.close()
+    conn.close()
+     
+
+    
+    return {
+            "mensagem": "Imóvel Criado",
+            "id": novo_id
+        }, 201
+    
 
 if __name__ == '__main__':
     app.run(debug=True)

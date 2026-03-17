@@ -98,12 +98,12 @@ def test_adicionar_novo_imovel(mock_connect_db, client):
         "data_aquisicao": "2024-01-15"
     }
     # Fazemos a requisição para a API
-    response = client.post('/api/imovei',json=novo_imovel)
+    response = client.post('/api/imoveis',json=novo_imovel)
     # Verificamos se o código de status da resposta é 201(OK)
     assert response.status_code == 201
     #verificar se a resposta da api esta correta 
     expected_response = {
-        "mensagem": "Imóvel criado",
+        "mensagem": "Imóvel Criado",
         "id": 3
     }
 
