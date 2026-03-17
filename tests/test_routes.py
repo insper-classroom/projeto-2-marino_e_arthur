@@ -44,5 +44,5 @@ def test_get_imoveis(mock_connect_db, client):
     assert response.get_json() == expected_response
 
     # Verificamos se a consulta SQL foi executada corretamente
-    mock_cursor.execute.assert_called_once_with("SELECT * from imoveis")
+    mock_cursor.execute.assert_called_once_with("SELECT * FROM imoveis")
 
