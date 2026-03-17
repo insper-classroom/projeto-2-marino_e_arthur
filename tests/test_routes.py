@@ -75,5 +75,47 @@ def test_buscar_imovel_id(mock_connect_db, client):
 
     # Verificamos se a consulta SQL foi executada corretamente
     mock_cursor.execute.assert_called_once_with("SELECT * FROM imoveis WHERE id = %s", (1,))
+@patch("api.connect_db")
+def test_adicionar_novo_imovel(mock_connect_db, client):
+    # Criamos um Mock para a conexão e o cursor
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+
+    # Configuramos o Mock para retornar o cursor quando chamarmos conn.cursor()
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+    # crio um id 
+    mock_cursor.lastrowid = 3
+    #novo imovel
+    novo_imovel = {
+        "logradouro": "Rua Street",
+        "tipo_logradouro": "Travessa",
+        "bairro": "Centro",
+        "cidade": "São Paulo",
+        "cep": "01234-567",
+        "tipo": "apartamento",
+        "valor": 350000.00,
+        "data_aquisicao": "2024-01-15"
+    }
+    # Fazemos a requisição para a API
+    response = client.post('/api/imovei',json=novo_imovel)
+    # Verificamos se o código de status da resposta é 201(OK)
+    assert response.status_code == 201
+    #verificar se a resposta da api esta correta 
+    expected_response = {
+        "mensagem": "Imóvel criado",
+        "id": 3
+    }
+
+    # Verificamos se os dados retornados estão corretos
+    assert response.get_json() == expected_response
+
+
+    # Verificar se a query SQL foi executada corretamente
+    mock_cursor.execute.assert_called_once()
+    # Opcional: verificar os parâmetros da query
+    args = mock_cursor.execute.call_args[0]
+    assert "INSERT INTO imoveis" in args[0]  # Verifica se é um INSERT
+
 
 
