@@ -35,7 +35,7 @@ def connect_db():
 app = Flask(__name__)
 
 @app.route('/api/imoveis', methods=['GET'])  # Corrigido: moveis -> imoveis
-def get_imoveis():  # Corrigido: get_moves -> get_imoveis
+def buscar_imoveis():  # Corrigido: get_moves -> get_imoveis
     """Lista todos os imóveis"""
     conn = connect_db()
     
@@ -68,6 +68,42 @@ def get_imoveis():  # Corrigido: get_moves -> get_imoveis
     conn.close()
     
     return jsonify({"imoveis": imoveis}), 200
+@app.route('/api/imoveis/<int:id>', methods=['GET']) 
+def buscar_imoveis_id(id):  # Corrigido: get_moves -> get_imoveis
+    """Lista todos os imóveis"""
+    conn = connect_db()
+    
+    if conn is None:
+        return {"erro": "Erro ao conectar ao banco de dados"}, 500
+    
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM imoveis WHERE id = %s", (id,))
+    imovel = cursor.fetchone()
+    
+    if not imovel:
+        cursor.close()
+        conn.close()
+        return {"erro": "Nenhum imóvel encontrado"}, 404
+    
+   
+   
+    imovel_dict = {
+        "id": imovel[0],
+        "logradouro": imovel[1],
+        "tipo_logradouro": imovel[2],
+        "bairro": imovel[3],
+        "cidade": imovel[4],
+        "cep": imovel[5],
+        "tipo": imovel[6],
+        "valor": float(imovel[7]) if imovel[7] else None,
+        "data_aquisicao": str(imovel[8]) if imovel[8] else None
+    }
+     
+    
+    cursor.close()
+    conn.close()
+    
+    return jsonify(imovel_dict), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

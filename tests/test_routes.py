@@ -56,8 +56,7 @@ def test_buscar_imovel_id(mock_connect_db, client):
     mock_conn.cursor.return_value = mock_cursor
 
     # Simulamos o retorno do banco de dados
-    mock_cursor.fetchall.return_value = [
-        (1, 'Nicole Common', 'Travessa', 'Lake Danielle', 'Judymouth', '85184', 'casa em condominio', 488423.52, '2017-07-29')]
+    mock_cursor.fetchone.return_value = (1, 'Nicole Common', 'Travessa', 'Lake Danielle', 'Judymouth', '85184', 'casa em condominio', 488423.52, '2017-07-29')
 
     # Substituímos a função `connect_db` para retornar nosso Mock em vez de uma conexão real
     mock_connect_db.return_value = mock_conn
@@ -69,11 +68,9 @@ def test_buscar_imovel_id(mock_connect_db, client):
     assert response.status_code == 200
 
     # Verificamos se os dados retornados estão corretos
-    expected_response = {
-        "imoveis": [
-        {"id": 1, "logradouro": 'Nicole Common', "tipo_logradouro":'Travessa', "bairro":'Lake Danielle',"cidade":'Judymouth','cep':'85184',"tipo":'casa em condominio', "valor": 488423.52,"data_aquisicao":'2017-07-29'},
-        ]
-    }
+    expected_response = {"id": 1, "logradouro": 'Nicole Common', "tipo_logradouro":'Travessa', "bairro":'Lake Danielle',"cidade":'Judymouth','cep':'85184',"tipo":'casa em condominio', "valor": 488423.52,"data_aquisicao":'2017-07-29'}
+
+
     assert response.get_json() == expected_response
 
     # Verificamos se a consulta SQL foi executada corretamente
