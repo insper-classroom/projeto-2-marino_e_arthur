@@ -153,6 +153,79 @@ def adicionar_novo_imovel():
             "id": novo_id
         }, 201
     
+@app.route('/api/imoveis/<int:id>', methods=['PUT'])
+def atualizar_imovel(id):
+    
+    # 1. Verificar se recebeu JSON
+    if not request.is_json:
+        return {"erro": "Content-Type deve ser application/json"}, 400
+    
+    #2 pegar os dados do post
+    dados = request.get_json()
+      # 4. Conectar ao banco de dados
+    conn = connect_db()
+    if not conn:
+        return {"erro": "Erro ao conectar ao banco de dados"}, 500
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM imoveis WHERE id = %s", (id,))
+    imovel = cursor.fetchone()
+    
+    if not imovel:
+        cursor.close()
+        conn.close()
+        return {"erro": "Nenhum imóvel encontrado"}, 404
+    
+   
+   
+    imovel_dict = {
+        "id": imovel[0],
+        "logradouro": imovel[1],
+        "tipo_logradouro": imovel[2],
+        "bairro": imovel[3],
+        "cidade": imovel[4],
+        "cep": imovel[5],
+        "tipo": imovel[6],
+        "valor": float(imovel[7]) if imovel[7] else None,
+        "data_aquisicao": str(imovel[8]) if imovel[8] else None
+    }
+    
+    # 3. Validar campos existentes
+    campos_existentes = ['logradouro', 'tipo_logradouro', 'bairro', 'cidade', 'cep', 'tipo', 'valor','data_aquisicao']
+    for campo in dados:
+        if campo not in campos_existentes:
+            return {"erro": f"Campo '{campo}' é invalido"}, 400
+        imovel_dict[campo] = dados[campo] 
+  
+    
+    cursor = conn.cursor()
+    #5 atualizar banco de dados 
+    
+    cursor.execute("""
+            UPDATE imoveis set       
+            logradouro =%s , tipo_logradouro =%s, bairro=%s, cidade=%s, cep=%s, tipo=%s, valor=%s, data_aquisicao=%s)
+            where id =%d
+        """,(
+            imovel_dict['logradouro'],
+            imovel_dict['tipo_logradouro'],
+            imovel_dict['bairro'],
+            imovel_dict['cidade'],
+            imovel_dict['cep'],
+            imovel_dict['tipo'],
+            imovel_dict['valor'],
+            imovel_dict.get('data_aquisicao'),
+            id
+        ))
+    conn.commit()
+  
+    novo_id = cursor.lastrowid
+    cursor.close()
+    conn.close()
+     
+
+    
+    return {
+            "mensagem": "Imóvel Atualizado",
+        }, 200 
 
 if __name__ == '__main__':
     app.run(debug=True)

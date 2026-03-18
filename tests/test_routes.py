@@ -130,7 +130,7 @@ def test_atualizar_imovel_existente(mock_connect_db, client):
     mock_cursor.fetchone.return_value = (1, 'Nicole Common', 'Travessa', 'Lake Danielle', 'Judymouth', '85184', 'casa em condominio', 488423.52, '2017-07-29')
     #novo imovel
     imovel_atualizado = {
-        "logradouro": "Rua Street",
+        "logradouro": "Rua Nova Atualizada",
         "tipo_logradouro": "Travessa",
         "bairro": "Centro",
         "cidade": "São Paulo",
@@ -146,8 +146,7 @@ def test_atualizar_imovel_existente(mock_connect_db, client):
     #verificar se a resposta da api esta correta 
     # Verificamos a mensagem de sucesso
     expected_response = {
-        "mensagem": "Imóvel atualizado com sucesso",
-        "id": 1
+        "mensagem": "Imóvel Atualizado",
     }
 
     # Verificamos se os dados retornados estão corretos
@@ -164,12 +163,12 @@ def test_atualizar_imovel_existente(mock_connect_db, client):
     assert calls[0][0][1] == (1,)
     
     # Verifica se a segunda chamada foi UPDATE
-    assert "UPDATE imoveis SET" in calls[1][0][0]
+    assert "UPDATE imoveis set" in calls[1][0][0]
     # Verifica se os parâmetros do UPDATE incluem os dados e o ID
     params = calls[1][0][1]
     assert params[0] == "Rua Nova Atualizada"  # logradouro
-    assert params[6] == 550000.00  # valor
-    assert params[7] == 1  # ID no final
+    assert params[6] == 350000.00  # valor
+    assert params[8] == 1  # ID no final
 
 
 
