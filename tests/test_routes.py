@@ -116,6 +116,61 @@ def test_adicionar_novo_imovel(mock_connect_db, client):
     # Opcional: verificar os parâmetros da query
     args = mock_cursor.execute.call_args[0]
     assert "INSERT INTO imoveis" in args[0]  # Verifica se é um INSERT
+@patch("api.connect_db")
+def test_atualizar_imovel_existente(mock_connect_db, client):
+    # Criamos um Mock para a conexão e o cursor
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+
+    # Configuramos o Mock para retornar o cursor quando chamarmos conn.cursor()
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+ 
+    # Simulamos o retorno do banco de dados
+    mock_cursor.fetchone.return_value = (1, 'Nicole Common', 'Travessa', 'Lake Danielle', 'Judymouth', '85184', 'casa em condominio', 488423.52, '2017-07-29')
+    #novo imovel
+    imovel_atualizado = {
+        "logradouro": "Rua Street",
+        "tipo_logradouro": "Travessa",
+        "bairro": "Centro",
+        "cidade": "São Paulo",
+        "cep": "01234-567",
+        "tipo": "apartamento",
+        "valor": 350000.00,
+        "data_aquisicao": "2024-01-15"
+    }
+    # Fazemos a requisição para a API
+    response = client.put('/api/imoveis/1',json=imovel_atualizado)
+    # Verificamos se o código de status da resposta é 201(OK)
+    assert response.status_code == 200
+    #verificar se a resposta da api esta correta 
+    # Verificamos a mensagem de sucesso
+    expected_response = {
+        "mensagem": "Imóvel atualizado com sucesso",
+        "id": 1
+    }
+
+    # Verificamos se os dados retornados estão corretos
+    assert response.get_json() == expected_response
+
+ # Verificamos se a query SQL de UPDATE foi executada
+    mock_cursor.execute.assert_called()
+    
+    # Pega todas as chamadas do execute
+    calls = mock_cursor.execute.call_args_list
+    
+    # Verifica se a primeira chamada foi SELECT (verificar se existe)
+    assert "SELECT * FROM imoveis WHERE id = %s" in calls[0][0][0]
+    assert calls[0][0][1] == (1,)
+    
+    # Verifica se a segunda chamada foi UPDATE
+    assert "UPDATE imoveis SET" in calls[1][0][0]
+    # Verifica se os parâmetros do UPDATE incluem os dados e o ID
+    params = calls[1][0][1]
+    assert params[0] == "Rua Nova Atualizada"  # logradouro
+    assert params[6] == 550000.00  # valor
+    assert params[7] == 1  # ID no final
+
 
 
 
