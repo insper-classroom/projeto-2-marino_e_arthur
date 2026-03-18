@@ -34,6 +34,10 @@ def connect_db():
 
 app = Flask(__name__)
 
+
+@app.get('/')
+def inicio():
+    return "", 200
 @app.route('/api/imoveis', methods=['GET'])  # Corrigido: moveis -> imoveis
 def buscar_imoveis():  # Corrigido: get_moves -> get_imoveis
     """Lista todos os imóveis"""
