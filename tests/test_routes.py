@@ -263,4 +263,60 @@ def test_buscar_imoveis_por_tipo(mock_connect_db, client):
         ('apartamento',)
     )
 
+@patch("api.connect_db")
+def test_buscar_imoveis_por_cidade(mock_connect_db, client):
+    # Mock conexão e cursor
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+
+    # Simula retorno do banco
+    mock_cursor.fetchall.return_value = [
+        (1, 'Rua A', 'Rua', 'Centro', 'São Paulo', '12345', 'apartamento', 300000.0, '2020-01-01'),
+        (2, 'Rua B', 'Rua', 'Centro', 'São Paulo', '67890', 'casa', 400000.0, '2021-01-01')
+    ]
+
+    # Requisição
+    response = client.get('/api/imoveis/cidade/São Paulo')
+
+    # Status
+    assert response.status_code == 200
+
+    # Resposta esperada
+    expected_response = {
+        "imoveis": [
+            {
+                "id": 1,
+                "logradouro": 'Rua A',
+                "tipo_logradouro": 'Rua',
+                "bairro": 'Centro',
+                "cidade": 'São Paulo',
+                "cep": '12345',
+                "tipo": 'apartamento',
+                "valor": 300000.0,
+                "data_aquisicao": '2020-01-01'
+            },
+            {
+                "id": 2,
+                "logradouro": 'Rua B',
+                "tipo_logradouro": 'Rua',
+                "bairro": 'Centro',
+                "cidade": 'São Paulo',
+                "cep": '67890',
+                "tipo": 'casa',
+                "valor": 400000.0,
+                "data_aquisicao": '2021-01-01'
+            }
+        ]
+    }
+
+    assert response.get_json() == expected_response
+
+    # Verifica SQL
+    mock_cursor.execute.assert_called_once_with(
+        "SELECT * FROM imoveis WHERE cidade = %s",
+        ('São Paulo',)
+    )
 
