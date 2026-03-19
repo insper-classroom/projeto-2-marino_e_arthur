@@ -206,5 +206,61 @@ def test_remover_imovel_existente(mock_connect_db, client):
     assert "DELETE FROM imoveis" in calls[1][0][0]
     assert calls[1][0][1] == (1,)
 
+@patch("api.connect_db")
+def test_buscar_imoveis_por_tipo(mock_connect_db, client):
+    # Mock conexão e cursor
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+
+    # Simula retorno do banco
+    mock_cursor.fetchall.return_value = [
+        (1, 'Rua A', 'Rua', 'Centro', 'SP', '12345', 'apartamento', 300000.0, '2020-01-01'),
+        (2, 'Rua B', 'Rua', 'Centro', 'SP', '67890', 'apartamento', 400000.0, '2021-01-01')
+    ]
+
+    # Requisição (rota que você VAI criar depois)
+    response = client.get('/api/imoveis/tipo/apartamento')
+
+    # Status
+    assert response.status_code == 200
+
+    # JSON esperado
+    expected_response = {
+        "imoveis": [
+            {
+                "id": 1,
+                "logradouro": 'Rua A',
+                "tipo_logradouro": 'Rua',
+                "bairro": 'Centro',
+                "cidade": 'SP',
+                "cep": '12345',
+                "tipo": 'apartamento',
+                "valor": 300000.0,
+                "data_aquisicao": '2020-01-01'
+            },
+            {
+                "id": 2,
+                "logradouro": 'Rua B',
+                "tipo_logradouro": 'Rua',
+                "bairro": 'Centro',
+                "cidade": 'SP',
+                "cep": '67890',
+                "tipo": 'apartamento',
+                "valor": 400000.0,
+                "data_aquisicao": '2021-01-01'
+            }
+        ]
+    }
+
+    assert response.get_json() == expected_response
+
+    # Verifica SQL
+    mock_cursor.execute.assert_called_once_with(
+        "SELECT * FROM imoveis WHERE tipo = %s",
+        ('apartamento',)
+    )
 
 
