@@ -233,3 +233,30 @@ def atualizar_imovel(id):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/api/imoveis/<int:id>', methods=['DELETE'])
+def remover_imovel(id):
+    conn = connect_db()
+    
+    if not conn:
+        return {"erro": "Erro ao conectar ao banco de dados"}, 500
+
+    cursor = conn.cursor()
+
+    # Verifica se o imóvel existe
+    cursor.execute("SELECT * FROM imoveis WHERE id = %s", (id,))
+    imovel = cursor.fetchone()
+
+    if not imovel:
+        cursor.close()
+        conn.close()
+        return {"erro": "Nenhum imóvel encontrado"}, 404
+
+    # Remove o imóvel
+    cursor.execute("DELETE FROM imoveis WHERE id = %s", (id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return {"mensagem": "Imóvel Deletado"}, 200
