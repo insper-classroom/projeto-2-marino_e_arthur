@@ -170,41 +170,60 @@ def test_atualizar_imovel_existente(mock_connect_db, client):
     assert params[6] == 350000.00  # valor
     assert params[8] == 1  # ID no final
 
+
 @patch("api.connect_db")
 def test_remover_imovel_existente(mock_connect_db, client):
-    # Criamos um Mock para a conexão e o cursor
     mock_conn = MagicMock()
     mock_cursor = MagicMock()
 
-    # Configuramos o Mock
     mock_conn.cursor.return_value = mock_cursor
     mock_connect_db.return_value = mock_conn
 
-    # Simulamos que o imóvel existe
     mock_cursor.fetchone.return_value = (1, 'Nicole Common', 'Travessa', 'Lake Danielle', 'Judymouth', '85184', 'casa em condominio', 488423.52, '2017-07-29')
 
-    # Fazemos a requisição DELETE
     response = client.delete('/api/imoveis/1')
 
-    # Verificamos o status code
     assert response.status_code == 200
 
-    # Verificamos a resposta
     expected_response = {
         "mensagem": "Imóvel Deletado"
     }
     assert response.get_json() == expected_response
 
-    # Verificamos as chamadas SQL
     calls = mock_cursor.execute.call_args_list
 
-    # Primeiro SELECT (verifica se existe)
     assert "SELECT * FROM imoveis WHERE id = %s" in calls[0][0][0]
     assert calls[0][0][1] == (1,)
 
-    # Depois DELETE
     assert "DELETE FROM imoveis" in calls[1][0][0]
     assert calls[1][0][1] == (1,)
+
+
+@patch("api.connect_db")
+def test_remover_imovel_nao_encontrado(mock_connect_db, client):
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+
+    # Simula que não encontrou o imóvel
+    mock_cursor.fetchone.return_value = None
+
+    response = client.delete('/api/imoveis/1')
+
+    assert response.status_code == 404
+    assert response.get_json() == {"erro": "Nenhum imóvel encontrado"}
+
+
+@patch("api.connect_db")
+def test_remover_imovel_erro_conexao(mock_connect_db, client):
+    mock_connect_db.return_value = None
+
+    response = client.delete('/api/imoveis/1')
+
+    assert response.status_code == 500
+    assert response.get_json() == {"erro": "Erro ao conectar ao banco de dados"}
 
 @patch("api.connect_db")
 def test_buscar_imoveis_por_tipo(mock_connect_db, client):
@@ -221,7 +240,7 @@ def test_buscar_imoveis_por_tipo(mock_connect_db, client):
         (2, 'Rua B', 'Rua', 'Centro', 'SP', '67890', 'apartamento', 400000.0, '2021-01-01')
     ]
 
-    # Requisição (rota que você VAI criar depois)
+    # Requisição
     response = client.get('/api/imoveis/tipo/apartamento')
 
     # Status
@@ -263,6 +282,56 @@ def test_buscar_imoveis_por_tipo(mock_connect_db, client):
         ('apartamento',)
     )
 
+
+@patch("api.connect_db")
+def test_buscar_imoveis_por_tipo_vazio(mock_connect_db, client):
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+
+    mock_cursor.fetchall.return_value = []
+
+    response = client.get('/api/imoveis/tipo/apartamento')
+
+    assert response.status_code == 404
+    assert response.get_json() == {"erro": "Nenhum imóvel encontrado"}
+
+
+@patch("api.connect_db")
+def test_buscar_imoveis_por_tipo_erro_conexao(mock_connect_db, client):
+    mock_connect_db.return_value = None
+
+    response = client.get('/api/imoveis/tipo/apartamento')
+
+    assert response.status_code == 500
+    assert response.get_json() == {"erro": "Erro ao conectar ao banco de dados"}
+
+@patch("api.connect_db")
+def test_buscar_imoveis_por_tipo_vazio(mock_connect_db, client):
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+
+    mock_cursor.fetchall.return_value = []
+
+    response = client.get('/api/imoveis/tipo/apartamento')
+
+    assert response.status_code == 404
+    assert response.get_json() == {"erro": "Nenhum imóvel encontrado"}
+
+
+@patch("api.connect_db")
+def test_buscar_imoveis_por_tipo_erro_conexao(mock_connect_db, client):
+    mock_connect_db.return_value = None
+
+    response = client.get('/api/imoveis/tipo/apartamento')
+
+    assert response.status_code == 500
+    assert response.get_json() == {"erro": "Erro ao conectar ao banco de dados"}
 @patch("api.connect_db")
 def test_buscar_imoveis_por_cidade(mock_connect_db, client):
     # Mock conexão e cursor
@@ -320,3 +389,28 @@ def test_buscar_imoveis_por_cidade(mock_connect_db, client):
         ('São Paulo',)
     )
 
+
+@patch("api.connect_db")
+def test_buscar_imoveis_por_cidade_vazio(mock_connect_db, client):
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+
+    mock_conn.cursor.return_value = mock_cursor
+    mock_connect_db.return_value = mock_conn
+
+    mock_cursor.fetchall.return_value = []
+
+    response = client.get('/api/imoveis/cidade/São Paulo')
+
+    assert response.status_code == 404
+    assert response.get_json() == {"erro": "Nenhum imóvel encontrado"}
+
+
+@patch("api.connect_db")
+def test_buscar_imoveis_por_cidade_erro_conexao(mock_connect_db, client):
+    mock_connect_db.return_value = None
+
+    response = client.get('/api/imoveis/cidade/São Paulo')
+
+    assert response.status_code == 500
+    assert response.get_json() == {"erro": "Erro ao conectar ao banco de dados"}

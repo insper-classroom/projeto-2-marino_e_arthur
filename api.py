@@ -331,4 +331,4 @@ def buscar_imoveis_por_cidade(cidade):
     cursor.close()
     conn.close()
 
-    return {"imoveis": imoveis}, 200
+    return jsonify({"imoveis": imoveis}), 200
